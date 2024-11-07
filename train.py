@@ -22,6 +22,7 @@ def train(
     warmup_steps: int,
     train_steps: int,
     max_seq_length: int,
+    bsz: int,
     train_accumulation_steps: int,
     device: str,
     save_steps: int,
@@ -70,7 +71,7 @@ def train(
         shuffle=False,
     )
     train_loader = iter(
-        DataLoader(ds, batch_size=1, num_workers=4, collate_fn=default_data_collator)
+        DataLoader(ds, batch_size=bsz, num_workers=4, collate_fn=default_data_collator)
     )
     b = next(train_loader)
     for step in range(1, train_steps + 1):
@@ -99,4 +100,4 @@ def train(
 
 
 if __name__ == "__main__":
-    train(5000, 250000, 12288, 8, "cuda:0", 5000)
+    train(5000, 250000, 3096, 4, 8, "cuda:0", 5000)
