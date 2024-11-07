@@ -5,7 +5,7 @@ from transformers import (
     GPT2TokenizerFast,
     default_data_collator,
 )
-from torch import optim
+from bitsandbytes import optim
 import torch
 from datasets import load_dataset, IterableDataset, DownloadConfig
 from trl.trainer.utils import ConstantLengthDataset
@@ -45,9 +45,11 @@ def train(
         model.to(device).train(),
         options={"triton.cudagraphs": True},
     )
-    optimizer = optim.AdamW(
-        model.parameters(), lr=1.5e-4, betas=(0.8, 0.99), fused=True
+    print(
+        f"Model size: {sum([x.numel() for x in model.parameters()]) * 100 // 1000_000 / 100}M"
     )
+    print(model.save_pretrained)
+    optimizer = optim.AdamW8bit(model.parameters(), lr=1.5e-4, betas=(0.8, 0.99))
     scheduler = get_cosine_schedule_with_warmup(optimizer, warmup_steps, train_steps)
     ctx = torch.amp.autocast(
         device_type="cuda" if "cuda" in device else "cpu", dtype=torch.bfloat16
@@ -98,4 +100,4 @@ def train(
 
 
 if __name__ == "__main__":
-    train(125000, 1250000, 16384, 4, "cuda:0", 5000)
+    train(125000, 1250000, 8192, 4, "cuda:0", 5000)
