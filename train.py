@@ -48,7 +48,6 @@ def train(
     print(
         f"Model size: {sum([x.numel() for x in model.parameters()]) * 100 // 1000_000 / 100}M"
     )
-    print(model.save_pretrained)
     optimizer = optim.AdamW8bit(model.parameters(), lr=1.5e-4, betas=(0.8, 0.99))
     scheduler = get_cosine_schedule_with_warmup(optimizer, warmup_steps, train_steps)
     ctx = torch.amp.autocast(
@@ -94,7 +93,7 @@ def train(
         optimizer.step()
         scheduler.step()
         optimizer.zero_grad()
-        print(step_loss / train_accumulation_steps)
+        print(f"Step: {step}, Loss: {step_loss / train_accumulation_steps}")
         if step % save_steps == 0:
             model.save_pretrained("./ckpt")
 
