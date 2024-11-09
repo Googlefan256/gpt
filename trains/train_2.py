@@ -42,10 +42,9 @@ def train(
     )
     config._attn_implementation = "sdpa"
     model = Gemma2ForCausalLM(config)
-    # model: Gemma2ForCausalLM = torch.compile(
-    #    model.to(device).train(), options={"triton.cudagraphs": True}
-    # )
-    model = model.to(device).train()
+    model: Gemma2ForCausalLM = torch.compile(
+        model.to(device).train(), options={"triton.cudagraphs": True}
+    )
     print(
         f"Model size: {sum([x.numel() for x in model.parameters()]) * 100 // 1000_000 / 100}M"
     )
