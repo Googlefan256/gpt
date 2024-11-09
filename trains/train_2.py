@@ -34,7 +34,7 @@ def train(
         vocab_size=len(tokenizer),
         hidden_size=128,
         intermediate_size=256,
-        num_hidden_layers=256,
+        num_hidden_layers=192,
         num_attention_heads=8,
         num_key_value_heads=4,
         head_dim=32,
