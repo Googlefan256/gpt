@@ -34,7 +34,7 @@ def train(
         vocab_size=len(tokenizer),
         hidden_size=192,
         intermediate_size=384,
-        num_hidden_layers=128,
+        num_hidden_layers=256,
         num_attention_heads=8,
         num_key_value_heads=4,
         head_dim=32,
@@ -100,4 +100,4 @@ def train(
 
 
 if __name__ == "__main__":
-    train(500, 25000, 3000, 6, 80, "cuda:0", 5000)
+    train(3000, 150000, 3000, 1, 80, "cuda:0", 5000)
