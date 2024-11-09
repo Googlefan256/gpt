@@ -32,9 +32,9 @@ def train(
     )
     config = Gemma2Config(
         vocab_size=len(tokenizer),
-        hidden_size=128,
-        intermediate_size=256,
-        num_hidden_layers=128,
+        hidden_size=192,
+        intermediate_size=384,
+        num_hidden_layers=256,
         num_attention_heads=8,
         num_key_value_heads=4,
         head_dim=32,
