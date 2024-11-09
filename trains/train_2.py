@@ -42,13 +42,14 @@ def train(
     )
     config._attn_implementation = "sdpa"
     model = Gemma2ForCausalLM(config)
-    model: Gemma2ForCausalLM = torch.compile(
-        model.to(device).train(), options={"triton.cudagraphs": True}
-    )
+    # model: Gemma2ForCausalLM = torch.compile(
+    #    model.to(device).train(), options={"triton.cudagraphs": True}
+    # )
+    model = model.to(device).train()
     print(
         f"Model size: {sum([x.numel() for x in model.parameters()]) * 100 // 1000_000 / 100}M"
     )
-    optimizer = optim.AdamW8bit(model.parameters(), lr=6e-4, betas=(0.8, 0.99))
+    optimizer = optim.AdamW8bit(model.parameters(), lr=6e-4, betas=(0.85, 0.99))
     scheduler = get_cosine_schedule_with_warmup(optimizer, warmup_steps, train_steps)
     ctx = torch.amp.autocast(
         device_type="cuda" if "cuda" in device else "cpu", dtype=torch.bfloat16
@@ -99,4 +100,4 @@ def train(
 
 
 if __name__ == "__main__":
-    train(500, 25000, 3096, 6, 80, "cuda:0", 5000)
+    train(500, 25000, 3000, 5, 80, "cuda:0", 5000)
