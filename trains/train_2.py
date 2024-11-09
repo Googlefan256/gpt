@@ -32,8 +32,8 @@ def train(
     )
     config = Gemma2Config(
         vocab_size=len(tokenizer),
-        hidden_size=192,
-        intermediate_size=384,
+        hidden_size=128,
+        intermediate_size=256,
         num_hidden_layers=256,
         num_attention_heads=8,
         num_key_value_heads=4,
@@ -100,4 +100,4 @@ def train(
 
 
 if __name__ == "__main__":
-    train(3000, 150000, 3000, 1, 80, "cuda:0", 5000)
+    train(1500, 75000, 3000, 2, 80, "cuda:0", 5000)
