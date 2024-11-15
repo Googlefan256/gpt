@@ -2,3 +2,4 @@ transformers[torch]
 trl
 datasets
 bitsandbytes
+peft
