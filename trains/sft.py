@@ -3,8 +3,12 @@ import torch
 from transformers import (
     Gemma2ForCausalLM,
     GPT2TokenizerFast,
+    default_data_collator,
+    get_cosine_schedule_with_warmup,
 )
-from trl import SFTTrainer, SFTConfig
+from bitsandbytes import optim
+from trl.trainer.utils import ConstantLengthDataset
+from torch.utils.data import DataLoader
 
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.set_float32_matmul_precision("high")
@@ -12,13 +16,20 @@ torch.backends.cudnn.allow_tf32 = True
 torch.backends.cudnn.benchmark = True
 torch.backends.cuda.enable_flash_sdp(True)
 
-if __name__ == "__main__":
-    max_seq_len = 3096
+
+def main(
+    bsz: int,
+    train_accumulation_steps: int,
+    save_steps: int,
+    max_seq_len: int,
+    device: str,
+    warmup_ratio: int,
+):
     model: Gemma2ForCausalLM = Gemma2ForCausalLM.from_pretrained(
         "neody/nemma-100m",
         attn_implementation="sdpa",
         torch_dtype=torch.bfloat16,
-        device_map="cuda",
+        device_map=device,
     )
     model = torch.compile(model, options={"triton.cudagraphs": True}, fullgraph=True)
     tokenizer: GPT2TokenizerFast = GPT2TokenizerFast.from_pretrained("neody/nemma-100m")
@@ -45,39 +56,55 @@ if __name__ == "__main__":
         return {"text": text}
 
     ds: Dataset = load_dataset("BAAI/Infinity-Instruct", "0625", split="train")
-    ds = ds.map(formatting, batched=True, remove_columns=ds.column_names, num_proc=6)
-    ds_len = len(ds)
-    ds = ds.to_iterable_dataset()
+    ds = ds.map(formatting, batched=True, remove_columns=ds.column_names, num_proc=20)
     tokenizer.padding_side = "right"
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.save_pretrained("./ckpt/tokenizer")
-    training_args = SFTConfig(
-        optim="adamw_8bit",
-        output_dir="./ckpt",
-        logging_steps=5,
-        do_train=True,
-        per_device_train_batch_size=1,
-        gradient_accumulation_steps=8,
-        save_steps=1000,
-        save_total_limit=2,
-        prediction_loss_only=True,
-        max_seq_length=max_seq_len,
-        max_steps=ds_len * 3,
-        bf16=True,
-        learning_rate=6e-5,
-        weight_decay=0.1,
-        lr_scheduler_type="cosine",
-        warmup_ratio=0.04,
-        dataloader_num_workers=1,
-        dataset_text_field="text",
-        num_of_sequences=64,
-        packing=True,
-    )
-    trainer = SFTTrainer(
-        model=model,
-        args=training_args,
-        train_dataset=ds,
+    ds: ConstantLengthDataset = ConstantLengthDataset(
         tokenizer=tokenizer,
-        formatting_func=lambda e: e["text"],
+        dataset=ds,
+        dataset_text_field="text",
+        seq_length=max_seq_len,
+        num_of_sequences=64,
+        infinite=True,
+        shuffle=False,
     )
-    trainer.train()
+    train_loader = iter(
+        DataLoader(ds, batch_size=bsz, num_workers=20, collate_fn=default_data_collator)
+    )
+    train_steps = len(ds) * 3
+    b = next(train_loader)
+    optimizer = optim.AdamW8bit(model.parameters(), lr=1.5e-4, betas=(0.8, 0.99))
+    scheduler = get_cosine_schedule_with_warmup(
+        optimizer, train_steps * warmup_ratio // 1, train_steps
+    )
+    ctx = torch.amp.autocast(
+        device_type="cuda" if "cuda" in device else "cpu", dtype=torch.bfloat16
+    )
+    for step in range(1, train_steps + 1):
+        step_loss = 0
+        for i in range(1, train_accumulation_steps + 1):
+            # forward pass
+            with ctx:
+                loss = model(
+                    input_ids=b["input_ids"].to(device),
+                    labels=b["labels"].to(device),
+                    return_dict=True,
+                ).loss
+                step_loss += loss.detach().item()
+            # advance the dataset for the next batch
+            b = next(train_loader)
+            # backward pass
+            loss.backward()  # just sync on the last step
+        for p in model.parameters():
+            p.grad /= train_accumulation_steps
+        optimizer.step()
+        scheduler.step()
+        optimizer.zero_grad()
+        print(f"Step: {step}, Loss: {step_loss / train_accumulation_steps}")
+        if step % save_steps == 0:
+            model.save_pretrained("./ckpt")
+
+
+if __name__ == "__main__":
+    main(1, 8, 5000, 3096, "cuda", 0.05)
