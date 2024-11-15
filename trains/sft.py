@@ -5,7 +5,6 @@ from transformers import (
     GPT2TokenizerFast,
 )
 from trl import SFTTrainer, SFTConfig
-from peft import LoraConfig, TaskType
 
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.set_float32_matmul_precision("high")
@@ -21,25 +20,10 @@ if __name__ == "__main__":
         torch_dtype=torch.bfloat16,
         device_map="cuda",
     )
+    model = torch.compile(model, options={"triton.cudagraphs": True}, fullgraph=True)
     tokenizer: GPT2TokenizerFast = GPT2TokenizerFast.from_pretrained("neody/nemma-100m")
     tokenizer.add_tokens(["<|start_of_turn|>", "<|end_of_turn|>"])
     model.resize_token_embeddings(len(tokenizer))
-    peft_config = LoraConfig(
-        task_type=TaskType.CAUSAL_LM,
-        inference_mode=False,
-        r=8,
-        lora_alpha=32,
-        lora_dropout=0.1,
-        target_modules=[
-            "q_proj",
-            "k_proj",
-            "v_proj",
-            "o_proj",
-            "w1",
-            "w2",
-            "w3",
-        ],
-    )
     with open("./template.jinja", "r") as r:
         tokenizer.chat_template = r.read()
 
@@ -92,6 +76,5 @@ if __name__ == "__main__":
         args=training_args,
         train_dataset=ds,
         tokenizer=tokenizer,
-        peft_config=peft_config,
     )
     trainer.train()
