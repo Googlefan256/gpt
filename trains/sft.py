@@ -68,8 +68,10 @@ if __name__ == "__main__":
         weight_decay=0.1,
         lr_scheduler_type="cosine",
         warmup_ratio=0.1,
-        dataloader_num_workers=4,
+        dataloader_num_workers=1,
         dataset_text_field="text",
+        num_of_sequences=64,
+        packing=True,
     )
     trainer = SFTTrainer(
         model=model,
