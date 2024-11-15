@@ -34,7 +34,7 @@ def main(
     tokenizer: GPT2TokenizerFast = GPT2TokenizerFast.from_pretrained("neody/nemma-100m")
     tokenizer.add_tokens(["<|start_of_turn|>", "<|end_of_turn|>"])
     model.resize_token_embeddings(len(tokenizer))
-    model = torch.compile(model, options={"triton.cudagraphs": True})
+    #model = torch.compile(model, options={"triton.cudagraphs": True})
     with open("./template.jinja", "r") as r:
         tokenizer.chat_template = r.read()
 
