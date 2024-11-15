@@ -9,6 +9,7 @@ from transformers import (
 from bitsandbytes import optim
 from trl.trainer.utils import ConstantLengthDataset
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.set_float32_matmul_precision("high")
@@ -80,7 +81,8 @@ def main(
     ctx = torch.amp.autocast(
         device_type="cuda" if "cuda" in device else "cpu", dtype=torch.bfloat16
     )
-    for step in range(1, train_steps + 1):
+    pbar = tqdm(range(1, train_steps + 1))
+    for step in pbar:
         step_loss = 0
         for i in range(1, train_accumulation_steps + 1):
             # forward pass
@@ -100,7 +102,9 @@ def main(
         optimizer.step()
         scheduler.step()
         optimizer.zero_grad()
-        print(f"Step: {step}, Loss: {step_loss / train_accumulation_steps}")
+        pbar.set_description(
+            f"Step: {step}, Loss: {step_loss / train_accumulation_steps}"
+        )
         if step % save_steps == 0:
             model.save_pretrained("./ckpt")
 
