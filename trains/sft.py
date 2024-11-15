@@ -31,7 +31,7 @@ def main(
         torch_dtype=torch.bfloat16,
         device_map=device,
     )
-    model = torch.compile(model, options={"triton.cudagraphs": True}, fullgraph=True)
+    model = torch.compile(model, options={"triton.cudagraphs": True})
     tokenizer: GPT2TokenizerFast = GPT2TokenizerFast.from_pretrained("neody/nemma-100m")
     tokenizer.add_tokens(["<|start_of_turn|>", "<|end_of_turn|>"])
     model.resize_token_embeddings(len(tokenizer))
