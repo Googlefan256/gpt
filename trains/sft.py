@@ -62,12 +62,12 @@ if __name__ == "__main__":
         save_total_limit=2,
         prediction_loss_only=True,
         max_seq_length=max_seq_len,
-        max_steps=ds_len // 4,
+        max_steps=ds_len * 3,
         bf16=True,
         learning_rate=6e-5,
         weight_decay=0.1,
         lr_scheduler_type="cosine",
-        warmup_ratio=0.1,
+        warmup_ratio=0.04,
         dataloader_num_workers=1,
         dataset_text_field="text",
         num_of_sequences=64,
@@ -78,5 +78,6 @@ if __name__ == "__main__":
         args=training_args,
         train_dataset=ds,
         tokenizer=tokenizer,
+        formatting_func=lambda e: e["text"],
     )
     trainer.train()
