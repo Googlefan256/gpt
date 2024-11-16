@@ -74,7 +74,7 @@ def main(
     )
     train_steps = len(ds) * 3
     b = next(train_loader)
-    optimizer = optim.AdamW8bit(model.parameters(), lr=1.5e-4, betas=(0.8, 0.99))
+    optimizer = optim.AdamW8bit(model.parameters(), lr=0.6e-4, betas=(0.8, 0.99))
     scheduler = get_cosine_schedule_with_warmup(
         optimizer, train_steps * warmup_ratio // 1, train_steps
     )

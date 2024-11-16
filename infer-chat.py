@@ -8,14 +8,13 @@ import torch
 from threading import Thread
 
 device = "cuda:0"
-tokenizer = AutoTokenizer.from_pretrained("./ckpt/tokenizer")
+tokenizer = AutoTokenizer.from_pretrained("neody/nemma-100m-it", subfolder="tokenizer")
 model = AutoModelForCausalLM.from_pretrained(
-    "./ckpt/final",
+    "neody/nemma-100m-it",
     attn_implementation="sdpa",
     torch_dtype=torch.bfloat16,
     device_map=device,
 )
-tokenizer.add_tokens(["<|start_of_turn|>", "<|end_of_turn|>"])
 model = torch.compile(
     model, options={"triton.cudagraphs": True}, fullgraph=True, dynamic=True
 )
