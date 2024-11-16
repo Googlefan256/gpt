@@ -25,6 +25,7 @@ def main(
     max_seq_len: int,
     device: str,
     warmup_ratio: int,
+    train_steps: int,
 ):
     model: Gemma2ForCausalLM = Gemma2ForCausalLM.from_pretrained(
         "neody/nemma-100m",
@@ -74,7 +75,6 @@ def main(
     train_loader = iter(
         DataLoader(ds, batch_size=bsz, num_workers=20, collate_fn=default_data_collator)
     )
-    train_steps = len(ds) * 3
     b = next(train_loader)
     optimizer = optim.AdamW8bit(model.parameters(), lr=0.6e-4, betas=(0.8, 0.99))
     scheduler = get_cosine_schedule_with_warmup(
@@ -112,4 +112,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main(3, 8, 5000, 3096, "cuda", 0.05)
+    main(3, 8, 5000, 3096, "cuda", 0.05, 1000)
