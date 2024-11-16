@@ -109,6 +109,7 @@ def main(
         )
         if step % save_steps == 0:
             model.save_pretrained("./ckpt")
+    model.save_pretrained("./ckpt")
 
 
 if __name__ == "__main__":
