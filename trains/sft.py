@@ -55,7 +55,6 @@ def main(
             ],
             tokenize=False,
         )
-        print(text)
         return {"text": text}
 
     ds: Dataset = load_dataset("yahma/alpaca-cleaned", split="train")
