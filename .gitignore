@@ -3,3 +3,4 @@ venv/
 ckpt/
 tok/
 *.sh
+test/

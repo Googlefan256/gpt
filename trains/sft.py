@@ -40,25 +40,21 @@ def main(
         tokenizer.chat_template = r.read()
 
     def formatting(example):
-        inst = example["instruction"]
-        inp = example["input"]
-        out = example["output"]
         text = tokenizer.apply_chat_template(
             [
                 [
                     {
-                        "role": "user",
-                        "content": inst + ("\n" + inp if inp != "" else ""),
+                        "role": "user" if x["from"] == "human" else "assistant",
+                        "content": x["value"],
                     },
-                    {"role": "assistant", "content": out},
                 ]
-                for inst, inp, out in zip(inst, inp, out)
+                for x in example["conversations"]
             ],
             tokenize=False,
         )
         return {"text": text}
 
-    ds: Dataset = load_dataset("yahma/alpaca-cleaned", split="train")
+    ds: Dataset = load_dataset("BAAI/Infinity-Instruct", "0625",split="train")
     ds = ds.map(formatting, batched=True, remove_columns=ds.column_names, num_proc=20)
     tokenizer.padding_side = "right"
     tokenizer.pad_token = tokenizer.eos_token
@@ -113,4 +109,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main(3, 8, 5000, 3096, "cuda", 0.05, 3000)
+    main(3, 8, 5000, 3096, "cuda", 0.05, 15000)
