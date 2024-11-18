@@ -34,7 +34,9 @@ def main(
         device_map=device,
     )
     tokenizer: GPT2TokenizerFast = GPT2TokenizerFast.from_pretrained("neody/nemma-100m")
-    tokenizer.add_tokens(["<|start_of_turn|>", "<|end_of_turn|>"])
+    tokenizer.add_tokens(
+        ["<|start_of_turn|>", "<|end_of_turn|>", "<|user|>", "<|assistant|>"]
+    )
     model.resize_token_embeddings(len(tokenizer))
     with open("./template.jinja", "r") as r:
         tokenizer.chat_template = r.read()
@@ -55,7 +57,11 @@ def main(
         )
         return {"text": text}
 
+    def filtering(example):
+        return [x == "en" for x in example["langdetect"]]
+
     ds: Dataset = load_dataset("BAAI/Infinity-Instruct", "0625", split="train")
+    ds = ds.filter(filtering, batched=True, num_proc=20)
     ds = ds.map(formatting, batched=True, remove_columns=ds.column_names, num_proc=20)
     tokenizer.padding_side = "right"
     tokenizer.pad_token = tokenizer.eos_token

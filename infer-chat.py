@@ -26,7 +26,11 @@ with torch.inference_mode():
         kwargs = dict(
             **tokenizer(
                 tokenizer.apply_chat_template(
-                    [{"role": "user", "content": input("Message: ")}],
+                    [
+                        {"role": "user", "content": "Hello"},
+                        {"role": "assistant", "content": "How can I help you today?"},
+                        {"role": "user", "content": input("Message: ")},
+                    ],
                     add_generation_prompt=True,
                     tokenize=False,
                 ),
@@ -37,7 +41,7 @@ with torch.inference_mode():
                 repetition_penalty=1.2,
                 num_beams=1,
                 do_sample=True,
-                eos_token_id=tokenizer.eos_token_id,
+                eos_token_id=tokenizer.convert_tokens_to_ids("<|end_of_turn|>"),
             ),
             streamer=streamer,
         )
