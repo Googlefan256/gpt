@@ -46,7 +46,8 @@ def main(
                     {
                         "role": "user" if x["from"] == "human" else "assistant",
                         "content": x["value"],
-                    },
+                    }
+                    for x in x
                 ]
                 for x in example["conversations"]
             ],
@@ -54,7 +55,7 @@ def main(
         )
         return {"text": text}
 
-    ds: Dataset = load_dataset("BAAI/Infinity-Instruct", "0625",split="train")
+    ds: Dataset = load_dataset("BAAI/Infinity-Instruct", "0625", split="train")
     ds = ds.map(formatting, batched=True, remove_columns=ds.column_names, num_proc=20)
     tokenizer.padding_side = "right"
     tokenizer.pad_token = tokenizer.eos_token
