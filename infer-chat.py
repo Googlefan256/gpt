@@ -27,8 +27,6 @@ with torch.inference_mode():
             **tokenizer(
                 tokenizer.apply_chat_template(
                     [
-                        {"role": "user", "content": "Hello"},
-                        {"role": "assistant", "content": "How can I help you today?"},
                         {"role": "user", "content": input("Message: ")},
                     ],
                     add_generation_prompt=True,
