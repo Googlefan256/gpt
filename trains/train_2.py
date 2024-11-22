@@ -184,7 +184,7 @@ def train(
     matrix_params = [p for p in params if p.ndim == 2]
     scalar_params = [p for p in params if p.ndim < 2]
     optimizer1 = Muon(matrix_params, lr=2e-4, momentum=0.95)
-    optimizer2 = optim.AdamW8bit(scalar_params, lr=2e-4, betas=(0.95, 0.99))
+    optimizer2 = optim.AdamW(scalar_params, lr=2e-4, betas=(0.95, 0.99))
     optimizers = [optimizer1, optimizer2]
     schedulers = [
         get_cosine_schedule_with_warmup(optimizer, warmup_steps, train_steps)
