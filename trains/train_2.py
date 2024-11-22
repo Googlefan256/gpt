@@ -61,7 +61,7 @@ def train(
         [model.transformer.wte.weight], lr=0.6, betas=(0.9, 0.95)
     )
     optimizer2 = optim.AdamW8bit(
-        [raw_model.lm_head.weight], lr=0.008, betas=(0.9, 0.95)
+        [raw_model.lm_head.weight], lr=3.5e-4, betas=(0.9, 0.95)
     )
     params = list(raw_model.transformer.h.parameters())
     matrix_params = [p for p in params if p.ndim == 2]
@@ -103,6 +103,7 @@ def train(
         step_loss = 0
         for i in range(1, train_accumulation_steps + 1):
             # forward pass
+            print(b["input_ids"], b["labels"])
             with ctx:
                 logits, loss = model(
                     b["input_ids"].to(device),
@@ -115,7 +116,7 @@ def train(
             loss.backward()  # just sync on the last step
         for p in model.parameters():
             p.grad /= train_accumulation_steps
-        frac = min(step / 500, 1)
+        frac = min(step / warmup_steps, 1)
         optimizer1.param_groups[0]["momentum"] = (1 - frac) * 0.85 + frac * 0.95
         for opt, sched in zip(optimizers, schedulers):
             opt.step()

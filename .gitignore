@@ -4,3 +4,4 @@ ckpt/
 tok/
 *.sh
 test/
+*.pt

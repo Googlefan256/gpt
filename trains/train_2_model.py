@@ -151,7 +151,7 @@ class GPT(nn.Module):
         self.lm_head = CastedLinear(config.n_embd, config.vocab_size, bias=False)
         self.lm_head.weight.data.zero_()  # @Grad62304977
 
-    def forward(self, idx, target):
+    def forward(self, idx, target=None):
 
         # forward the GPT model itself
         x = self.transformer.wte(idx)  # token embeddings of shape (b, t, n_embd)
@@ -182,10 +182,42 @@ class GPT(nn.Module):
         logits = self.lm_head(x)
         logits = 30 * torch.tanh(logits / 30)  # @Grad62304977
         logits = logits.float()
-        loss = F.cross_entropy(logits.view(-1, logits.size(-1)), target.view(-1))
-        logits = logits.float()
         if target is not None:
             loss = F.cross_entropy(logits.view(-1, logits.size(-1)), target.view(-1))
         else:
             loss = None
         return logits, loss
+
+    def generate(
+        self, idx: torch.Tensor, max_new_tokens: int, temperature=1.0, top_k=None
+    ):
+        """
+        Generate text tokens using the trained model.
+        idx: (batch_size, sequence_length) array of indices in current context
+        max_new_tokens: number of tokens to generate
+        temperature: temperature for sampling (higher = more random)
+        top_k: if set, only sample from the top k most probable tokens
+        """
+        for _ in range(max_new_tokens):
+
+            # get predictions
+            logits, _ = self(idx)
+
+            # focus only on the last time step
+            logits = logits[:, -1, :] / temperature
+
+            # optionally crop probabilities to only the top k options
+            if top_k is not None:
+                v, _ = torch.topk(logits, min(top_k, logits.size(-1)))
+                logits[logits < v[:, [-1]]] = float("-inf")
+
+            # apply softmax to convert logits to probabilities
+            probs = F.softmax(logits, dim=-1)
+
+            # sample from the distribution
+            idx_next = torch.multinomial(probs, num_samples=1)
+
+            # append sampled index to the running sequence
+            idx = torch.cat((idx, idx_next), dim=1)
+
+        return idx
