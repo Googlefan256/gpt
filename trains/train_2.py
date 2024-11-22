@@ -38,6 +38,7 @@ def train(
                 n_layer=32,
                 n_head=6,
                 n_embd=540,
+                eos_id=tokenizer.eos_token_id,
             )
         )
         .to(device, torch.bfloat16)
@@ -99,8 +100,8 @@ def train(
             # forward pass
             with ctx:
                 logits, loss = model(
-                    b["input_ids"].to(device),
-                    b["labels"].to(device),
+                    b["input_ids"].to(device).squeeze(),
+                    b["labels"].to(device).squeeze(),
                 )
                 step_loss += loss.detach().item()
             # advance the dataset for the next batch

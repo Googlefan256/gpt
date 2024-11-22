@@ -141,6 +141,7 @@ class GPTConfig:
     n_layer: int = 12
     n_head: int = 6
     n_embd: int = 768
+    eos_id: int = -1
 
 
 class GPT(nn.Module):
@@ -155,7 +156,7 @@ class GPT(nn.Module):
         )  # Remaining for decoder
         # Add learnable skip connection weights for decoder layers
         self.skip_weights = nn.Parameter(torch.ones(self.num_decoder_layers))
-
+        self.eos_id = config.eos_id
         self.transformer = nn.ModuleDict(
             dict(
                 wte=nn.Embedding(config.vocab_size, config.n_embd),
@@ -167,7 +168,7 @@ class GPT(nn.Module):
 
     def forward(self, idx, target=None):
 
-        docs = (idx == 50256).cumsum(0)
+        docs = (idx == self.eos_id).cumsum(0)
 
         def document_causal_mask(b, h, q_idx, kv_idx):
             causal_mask = q_idx >= kv_idx
