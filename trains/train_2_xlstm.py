@@ -50,8 +50,8 @@ def train(
                 slstm=SLSTMLayerConfig(num_heads=4, num_gates=4, num_states=4),
                 feedforward=FeedForwardConfig(),
             ),
-            context_length=4096,
-            num_blocks=40,
+            context_length=3072,
+            num_blocks=32,
             embedding_dim=768,
             vocab_size=len(tokenizer),
             slstm_at=[1, 15, 27, 39],
@@ -118,4 +118,4 @@ def train(
 
 
 if __name__ == "__main__":
-    train(5000, 500000, 4096, 6, 8, "cuda:0", 5000)
+    train(5000, 500000, 3072, 6, 8, "cuda:0", 5000)
