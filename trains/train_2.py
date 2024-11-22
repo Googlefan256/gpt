@@ -238,6 +238,7 @@ def train(
         print(f"Step: {step}, Loss: {step_loss / train_accumulation_steps}")
         if step % save_steps == 0:
             model.save_pretrained("./ckpt")
+    model.save_pretrained("./ckpt")
 
 
 if __name__ == "__main__":
