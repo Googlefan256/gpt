@@ -52,7 +52,7 @@ def train(
             ),
             context_length=3072,
             num_blocks=32,
-            embedding_dim=768,
+            embedding_dim=256,
             vocab_size=len(tokenizer),
             slstm_at=[1, 15, 27],
             tie_weights=True,
