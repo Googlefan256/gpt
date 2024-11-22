@@ -231,6 +231,8 @@ def train(
             loss.backward()  # just sync on the last step
         for p in model.parameters():
             p.grad /= train_accumulation_steps
+        frac = min(step / 500, 1)
+        optimizer1.param_groups[0]["momentum"] = (1 - frac) * 0.85 + frac * 0.95
         for opt, sched in zip(optimizers, schedulers):
             opt.step()
             sched.step()
