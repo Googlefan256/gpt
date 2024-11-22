@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from transformers.loss.loss_utils import ForCausalLMLoss
 
 import torch
 from torch import nn
@@ -183,7 +184,7 @@ class GPT(nn.Module):
         logits = 30 * torch.tanh(logits / 30)  # @Grad62304977
         logits = logits.float()
         if target is not None:
-            loss = F.cross_entropy(logits.view(-1, logits.size(-1)), target.view(-1))
+            loss = ForCausalLMLoss(logits, target, self.config.vocab_size)
         else:
             loss = None
         return logits, loss

@@ -103,7 +103,6 @@ def train(
         step_loss = 0
         for i in range(1, train_accumulation_steps + 1):
             # forward pass
-            print(b["input_ids"], b["labels"])
             with ctx:
                 logits, loss = model(
                     b["input_ids"].to(device),
