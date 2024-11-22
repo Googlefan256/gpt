@@ -175,7 +175,7 @@ class GPT(nn.Module):
 
         S = len(idx)
         block_mask = create_block_mask(
-            document_causal_mask, None, None, S, S, device="cuda", _compile=True
+            document_causal_mask, None, None, S, S, device="cuda"
         )
 
         # forward the GPT model itself

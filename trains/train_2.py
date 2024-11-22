@@ -49,6 +49,8 @@ def train(
     print(
         f"Model size: {sum([x.numel() for x in model.parameters()]) * 100 // 1000_000 / 100}M"
     )
+    model: GPT = torch.compile(model, options={"triton.cudagraphs": True})
+    print("Compiled")
     optimizer1 = optim.AdamW8bit(
         [model.transformer.wte.weight], lr=0.6, betas=(0.9, 0.95)
     )
