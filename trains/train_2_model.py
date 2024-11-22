@@ -173,7 +173,8 @@ class GPT(nn.Module):
             causal_mask = q_idx >= kv_idx
             document_mask = docs[q_idx] == docs[kv_idx]
             window_mask = q_idx - kv_idx < 1024
-            return (causal_mask & document_mask & window_mask).reshape(b, -1)
+            print(window_mask.shape)
+            return causal_mask & document_mask & window_mask
 
         B, S = idx.size()
         block_mask = create_block_mask(
