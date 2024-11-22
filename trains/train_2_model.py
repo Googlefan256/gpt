@@ -4,10 +4,12 @@ from dataclasses import dataclass
 import torch
 from torch import nn
 import torch.nn.functional as F
-import torch.distributed as dist
 
 # Use of FlexAttention contributed by @KoszarskyB
 from torch.nn.attention.flex_attention import flex_attention, create_block_mask
+
+flex_attention = torch.compile(flex_attention, dynamic=False)
+create_block_mask = torch.compile(create_block_mask, dynamic=False)
 
 
 class Rotary(torch.nn.Module):
@@ -175,7 +177,7 @@ class GPT(nn.Module):
 
         S = len(idx)
         block_mask = create_block_mask(
-            document_causal_mask, None, None, S, S, device="cuda"
+            document_causal_mask, None, None, S, S, device="cuda", _compile=True
         )
 
         # forward the GPT model itself
