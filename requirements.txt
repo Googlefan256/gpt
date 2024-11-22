@@ -3,3 +3,4 @@ trl
 datasets
 bitsandbytes
 peft
+ninja
