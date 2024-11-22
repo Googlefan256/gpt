@@ -44,7 +44,6 @@ def train(
                 n_layer=32,
                 n_head=4,
                 n_embd=512,
-                eos_id=tokenizer.eos_token_id,
             )
         )
         .to(device, torch.bfloat16)
@@ -57,7 +56,7 @@ def train(
         f"Model size: {sum([x.numel() for x in model.parameters()]) * 100 // 1000_000 / 100}M"
     )
     raw_model = model
-    model = torch.compile(model)
+    model = torch.compile(model, options={"triton.cudagraphs": True}, fullgraph=True)
     optimizer1 = optim.AdamW8bit(
         [model.transformer.wte.weight], lr=0.6, betas=(0.9, 0.95)
     )
