@@ -37,7 +37,7 @@ def train(
                 vocab_size=len(tokenizer),
                 n_layer=32,
                 n_head=6,
-                n_embd=512,
+                n_embd=540,
             )
         )
         .to(device, torch.bfloat16)
