@@ -62,10 +62,6 @@ def train(
     print(
         f"Model size: {sum([x.numel() for x in model.parameters()]) * 100 // 1000_000 / 100}M"
     )
-    model: XLSTMLMModel = torch.compile(
-        model.to(device).train(), options={"triton.cudagraphs": True}, fullgraph=True
-    )
-    print("Model compiled")
     optimizer = optim.AdamW8bit(model.parameters(), lr=1.5e-4, betas=(0.8, 0.99))
     scheduler = get_cosine_schedule_with_warmup(optimizer, warmup_steps, train_steps)
     ctx = torch.amp.autocast(
