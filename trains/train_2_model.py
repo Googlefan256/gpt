@@ -184,7 +184,7 @@ class GPT(nn.Module):
         logits = logits.float()
         loss = F.cross_entropy(logits.view(-1, logits.size(-1)), target.view(-1))
         logits = logits.float()
-        if not target:
+        if target is not None:
             loss = F.cross_entropy(logits.view(-1, logits.size(-1)), target.view(-1))
         else:
             loss = None
