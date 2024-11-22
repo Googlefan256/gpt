@@ -182,10 +182,8 @@ def train(
     print("Compiled")
     params = list(model.model.layers.parameters())
     matrix_params = [p for p in params if p.ndim == 2]
-    scalar_params = [p for p in params if p.ndim < 2]
-    for p in model.lm_head.parameters():
-        scalar_params.append(p)
-    for p in model.lm_head.parameters():
+    scalar_params = [p for p in params if p.ndim != 2]
+    for p in model.model.embed_tokens.parameters():
         scalar_params.append(p)
     optimizer1 = Muon(matrix_params, lr=2e-4, momentum=0.95)
     optimizer2 = optim.AdamW8bit(scalar_params, lr=2e-4, betas=(0.95, 0.99))
