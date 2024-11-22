@@ -35,9 +35,9 @@ def train(
         GPT(
             GPTConfig(
                 vocab_size=len(tokenizer),
-                n_layer=32,
+                n_layer=36,
                 n_head=4,
-                n_embd=576,
+                n_embd=512,
                 eos_id=tokenizer.eos_token_id,
             )
         )
