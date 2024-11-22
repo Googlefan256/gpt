@@ -166,7 +166,7 @@ class GPT(nn.Module):
         self.lm_head = CastedLinear(config.n_embd, config.vocab_size, bias=False)
         self.lm_head.weight.data.zero_()  # @Grad62304977
 
-    def forward(self, idx, target=None):
+    def forward(self, idx: torch.Tensor, target: torch.Tensor = None):
 
         docs = (idx == self.eos_id).cumsum(0)
 
