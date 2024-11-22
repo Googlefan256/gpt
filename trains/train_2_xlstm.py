@@ -58,7 +58,7 @@ def train(
             tie_weights=True,
             dropout=0.1,
         )
-    ).to(torch.bfloat16)
+    ).to(device, torch.bfloat16)
     print(
         f"Model size: {sum([x.numel() for x in model.parameters()]) * 100 // 1000_000 / 100}M"
     )
