@@ -105,8 +105,8 @@ def train(
             # forward pass
             with ctx:
                 logits, loss = model(
-                    b["input_ids"].to(device).squeeze(),
-                    b["labels"].to(device).squeeze(),
+                    b["input_ids"].to(device),
+                    b["labels"].to(device),
                 )
                 step_loss += loss.detach().item()
             # advance the dataset for the next batch
@@ -128,4 +128,4 @@ def train(
 
 
 if __name__ == "__main__":
-    train(5000, 500000, 16384, 1, 16, "cuda:0", 5000)
+    train(5000, 500000, 4096, 4, 16, "cuda:0", 5000)
