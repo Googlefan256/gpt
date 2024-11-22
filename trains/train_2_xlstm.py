@@ -54,7 +54,7 @@ def train(
             num_blocks=7,
             embedding_dim=128,
             vocab_size=len(tokenizer),
-            slstm_at=[3, 5],
+            slstm_at=[1],
             tie_weights=True,
             dropout=0.1,
         )
