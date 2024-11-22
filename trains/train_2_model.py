@@ -176,9 +176,9 @@ class GPT(nn.Module):
             print(window_mask.shape)
             return causal_mask & document_mask & window_mask
 
-        B, S = idx.size()
+        S = len(idx)
         block_mask = create_block_mask(
-            document_causal_mask, B, None, S, S, device="cuda", _compile=True
+            document_causal_mask, None, None, S, S, device="cuda", _compile=True
         )
 
         # forward the GPT model itself
