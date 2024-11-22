@@ -43,11 +43,11 @@ def train(
         XLSTMLMModelConfig(
             mlstm_block=MLSTMBlockConfig(
                 mlstm=MLSTMLayerConfig(
-                    num_heads=6, qkv_proj_blocksize=6, conv1d_kernel_size=6
+                    num_heads=4, qkv_proj_blocksize=4, conv1d_kernel_size=4
                 )
             ),
             slstm_block=SLSTMBlockConfig(
-                slstm=SLSTMLayerConfig(num_heads=6, num_gates=6, num_states=6),
+                slstm=SLSTMLayerConfig(num_heads=4, num_gates=4, num_states=4),
                 feedforward=FeedForwardConfig(),
             ),
             context_length=4096,
