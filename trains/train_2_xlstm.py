@@ -90,6 +90,7 @@ def train(
     train_loader = iter(
         DataLoader(ds, batch_size=bsz, num_workers=4, collate_fn=default_data_collator)
     )
+    print("Created train loader")
     b = next(train_loader)
     for step in range(1, train_steps + 1):
         step_loss = 0
@@ -98,9 +99,7 @@ def train(
             with ctx:
                 labels = b["labels"].to(device)
                 outputs = model(
-                    input_ids=b["input_ids"].to(device),
-                    labels=labels,
-                    return_dict=True,
+                    b["input_ids"].to(device),
                 )
                 loss = F.cross_entropy(
                     outputs.view(-1, model.config.vocab_size),
