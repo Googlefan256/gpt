@@ -36,8 +36,8 @@ def train(
             GPTConfig(
                 vocab_size=len(tokenizer),
                 n_layer=32,
-                n_head=8,
-                n_embd=1024,
+                n_head=6,
+                n_embd=512,
             )
         )
         .to(device, torch.bfloat16)
