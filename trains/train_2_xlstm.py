@@ -43,15 +43,15 @@ def train(
         XLSTMLMModelConfig(
             mlstm_block=MLSTMBlockConfig(
                 mlstm=MLSTMLayerConfig(
-                    num_heads=8, qkv_proj_blocksize=8, conv1d_kernel_size=8
+                    num_heads=6, qkv_proj_blocksize=6, conv1d_kernel_size=6
                 )
             ),
             slstm_block=SLSTMBlockConfig(
-                slstm=SLSTMLayerConfig(num_heads=8, num_gates=8, num_states=8),
+                slstm=SLSTMLayerConfig(num_heads=6, num_gates=6, num_states=6),
                 feedforward=FeedForwardConfig(),
             ),
             context_length=16384,
-            num_blocks=48,
+            num_blocks=40,
             embedding_dim=768,
             vocab_size=len(tokenizer),
             slstm_at=[1, 15, 27, 39],
