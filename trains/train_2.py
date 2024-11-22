@@ -32,7 +32,14 @@ def train(
         "openai-community/gpt2"
     )
     model = (
-        GPT(GPTConfig(vocab_size=len(tokenizer), n_layer=32, n_head=8, n_embd=1024))
+        GPT(
+            GPTConfig(
+                vocab_size=len(tokenizer),
+                n_layer=32,
+                n_head=8,
+                n_embd=1024,
+            )
+        )
         .to(device, torch.bfloat16)
         .train()
     )
