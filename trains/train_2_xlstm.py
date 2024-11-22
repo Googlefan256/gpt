@@ -51,10 +51,10 @@ def train(
                 feedforward=FeedForwardConfig(),
             ),
             context_length=3072,
-            num_blocks=32,
-            embedding_dim=256,
+            num_blocks=8,
+            embedding_dim=1536,
             vocab_size=len(tokenizer),
-            slstm_at=[1, 15, 27],
+            slstm_at=[3, 5],
             tie_weights=True,
             dropout=0.1,
         )
