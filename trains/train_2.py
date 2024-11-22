@@ -10,13 +10,17 @@ from datasets import load_dataset, IterableDataset, DownloadConfig
 from trl.trainer.utils import ConstantLengthDataset
 from torch.utils.data import DataLoader
 from .train_2_model import GPT, CastedLinear, GPTConfig
+import torch._inductor.config as config
 from .train_2_optimizer import Muon
 
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.set_float32_matmul_precision("high")
 torch.backends.cudnn.allow_tf32 = True
 torch.backends.cudnn.benchmark = True
-torch.backends.cuda.enable_flash_sdp(True)
+torch.backends.cuda.enable_cudnn_sdp(True)
+torch.backends.cuda.enable_flash_sdp(False)
+torch.backends.cuda.enable_mem_efficient_sdp(False)
+torch.backends.cuda.enable_math_sdp(False)
 
 
 def train(
@@ -28,6 +32,8 @@ def train(
     device: str,
     save_steps: int,
 ):
+    if hasattr(config, "coordinate_descent_tuning"):
+        config.coordinate_descent_tuning = True  # suggested by @Chillee
     tokenizer: GPT2TokenizerFast = GPT2TokenizerFast.from_pretrained(
         "openai-community/gpt2"
     )
@@ -36,8 +42,8 @@ def train(
             GPTConfig(
                 vocab_size=len(tokenizer),
                 n_layer=32,
-                n_head=6,
-                n_embd=768,
+                n_head=4,
+                n_embd=512,
                 eos_id=tokenizer.eos_token_id,
             )
         )
