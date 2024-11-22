@@ -49,18 +49,14 @@ def train(
     print(
         f"Model size: {sum([x.numel() for x in model.parameters()]) * 100 // 1000_000 / 100}M"
     )
-    raw_model = model
-    model: GPT = torch.compile(model)
     print("Compiled")
     optimizer1 = optim.AdamW8bit(
-        [raw_model.transformer.wte.weight], lr=0.6, betas=(0.9, 0.95)
+        [model.transformer.wte.weight], lr=0.6, betas=(0.9, 0.95)
     )
-    optimizer2 = optim.AdamW8bit(
-        [raw_model.lm_head.weight], lr=0.008, betas=(0.9, 0.95)
-    )
-    params = list(raw_model.transformer.h.parameters())
+    optimizer2 = optim.AdamW8bit([model.lm_head.weight], lr=0.008, betas=(0.9, 0.95))
+    params = list(model.transformer.h.parameters())
     matrix_params = [p for p in params if p.ndim == 2]
-    scalar_params = [p for p in params if p.ndim < 2] + [raw_model.skip_weights]
+    scalar_params = [p for p in params if p.ndim < 2] + [model.skip_weights]
     optimizer3 = Muon(matrix_params, lr=0.04, momentum=0.95)
     optimizer4 = optim.AdamW8bit(
         scalar_params, lr=0.04, betas=(0.9, 0.95)
@@ -118,8 +114,8 @@ def train(
         model.zero_grad(set_to_none=True)
         print(f"Step: {step}, Loss: {step_loss / train_accumulation_steps}")
         if step % save_steps == 0:
-            torch.save(raw_model.state_dict(), "./ckpt")
-    torch.save(raw_model.state_dict(), "./ckpt")
+            torch.save(model.state_dict(), "./ckpt")
+    torch.save(model.state_dict(), "./ckpt")
 
 
 if __name__ == "__main__":
