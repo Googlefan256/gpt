@@ -190,7 +190,12 @@ class GPT(nn.Module):
         return logits, loss
 
     def generate(
-        self, idx: torch.Tensor, max_new_tokens: int, temperature=1.0, top_k=None
+        self,
+        idx: torch.Tensor,
+        max_new_tokens: int,
+        temperature=1.0,
+        top_k=None,
+        repeat_penalty: float = 1.0,
     ):
         """
         Generate text tokens using the trained model.
@@ -206,7 +211,15 @@ class GPT(nn.Module):
 
             # focus only on the last time step
             logits = logits[:, -1, :] / temperature
+            if repeat_penalty > 1.0:
+                # get unique tokens in the context
+                context_tokens = idx[0].unique()
 
+                # create penalty tensor (1.0 for unseen tokens, repeat_penalty for seen tokens)
+                penalty = torch.ones_like(logits)
+                penalty[:, context_tokens] = repeat_penalty
+                # apply penalty by dividing logits
+                logits = logits / penalty
             # optionally crop probabilities to only the top k options
             if top_k is not None:
                 v, _ = torch.topk(logits, min(top_k, logits.size(-1)))

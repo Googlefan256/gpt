@@ -22,5 +22,6 @@ ids = model.generate(
     ).input_ids,
     20,
     0.4,
+    repeat_penalty=1.2,
 ).squeeze()
 print(ids, tokenizer.decode(ids))
