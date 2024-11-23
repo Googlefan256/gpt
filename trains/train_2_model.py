@@ -232,8 +232,7 @@ class GPT(nn.Module):
             if streamer:
                 streamer.put(idx_next)
             if idx_next == eos:
-                if streamer:
-                    streamer.end()
                 break
-
+        if streamer:
+            streamer.end()
         return idx
