@@ -32,7 +32,7 @@ with torch.inference_mode():
                 return_tensors="pt",
                 add_special_tokens=True,
             ).input_ids.to(device),
-            max_new_tokens=200,
+            max_new_tokens=2000,
             temperature=0.4,
             repeat_penalty=1.2,
             eos=tokenizer.eos_token_id,
