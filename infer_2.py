@@ -4,6 +4,7 @@ from transformers import (
 )
 import torch
 
+device = "cuda:0"
 tokenizer: GPT2TokenizerFast = GPT2TokenizerFast.from_pretrained(
     "openai-community/gpt2"
 )
@@ -15,13 +16,19 @@ model = GPT(
         n_embd=384,
     )
 )
+model.to(device, dtype=torch.bfloat16)
 model.load_state_dict(torch.load("./ckpt.pt", weights_only=True))
-ids = model.generate(
-    tokenizer(
-        "Hello, my name is", return_tensors="pt", add_special_tokens=True
-    ).input_ids,
-    20,
-    0.4,
-    repeat_penalty=1.2,
-).squeeze()
-print(ids, tokenizer.decode(ids))
+model = torch.compile(
+    model, options={"triton.cudagraphs": True}, fullgraph=True, dynamic=True
+)
+with torch.inference_mode():
+    while True:
+        ids = model.generate(
+            tokenizer(
+                input("Message: "), return_tensors="pt", add_special_tokens=True
+            ).input_ids.to(device),
+            200,
+            0.4,
+            repeat_penalty=1.2,
+        ).squeeze()
+        print(f"Output: {tokenizer.decode(ids)}")
