@@ -18,17 +18,23 @@ model = GPT(
 )
 model.to(device, dtype=torch.bfloat16)
 model.load_state_dict(torch.load("./ckpt.pt", weights_only=True))
-model = torch.compile(
+model: GPT = torch.compile(
     model, options={"triton.cudagraphs": True}, fullgraph=True, dynamic=True
 )
 with torch.inference_mode():
     while True:
-        ids = model.generate(
-            tokenizer(
-                input("Message: "), return_tensors="pt", add_special_tokens=True
-            ).input_ids.to(device),
+        msg = input("Message: ")
+        it = model.generate(
+            tokenizer(msg, return_tensors="pt", add_special_tokens=True).input_ids.to(
+                device
+            ),
             200,
             0.4,
             repeat_penalty=1.2,
-        ).squeeze()
-        print(f"Output: {tokenizer.decode(ids)}")
+            eos=tokenizer.eos_token_id,
+            stream=True,
+        )
+        print(f"Output: {msg}", end="", flush=True)
+        for x in it:
+            print(tokenizer.decode(x.squeeze()), end="", flush=True)
+        print("")

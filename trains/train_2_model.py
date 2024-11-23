@@ -196,14 +196,9 @@ class GPT(nn.Module):
         temperature=1.0,
         top_k=None,
         repeat_penalty: float = 1.0,
+        eos: int = -1,
+        stream: bool = False,
     ):
-        """
-        Generate text tokens using the trained model.
-        idx: (batch_size, sequence_length) array of indices in current context
-        max_new_tokens: number of tokens to generate
-        temperature: temperature for sampling (higher = more random)
-        top_k: if set, only sample from the top k most probable tokens
-        """
         for _ in range(max_new_tokens):
 
             # get predictions
@@ -230,8 +225,11 @@ class GPT(nn.Module):
 
             # sample from the distribution
             idx_next = torch.multinomial(probs, num_samples=1)
-
             # append sampled index to the running sequence
             idx = torch.cat((idx, idx_next), dim=1)
+            if stream:
+                yield idx_next
+            if idx_next == eos:
+                break
 
         return idx
