@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from transformers.loss.loss_utils import ForCausalLMLoss
+from transformers import TextIteratorStreamer
 
 import torch
 from torch import nn
@@ -189,6 +190,7 @@ class GPT(nn.Module):
             loss = None
         return logits, loss
 
+    @torch.inference_mode()
     def generate(
         self,
         idx: torch.Tensor,
@@ -197,7 +199,7 @@ class GPT(nn.Module):
         top_k=None,
         repeat_penalty: float = 1.0,
         eos: int = -1,
-        stream: bool = False,
+        streamer: TextIteratorStreamer = None,
     ):
         for _ in range(max_new_tokens):
 
@@ -227,9 +229,11 @@ class GPT(nn.Module):
             idx_next = torch.multinomial(probs, num_samples=1)
             # append sampled index to the running sequence
             idx = torch.cat((idx, idx_next), dim=1)
-            if stream:
-                yield idx_next
+            if streamer:
+                streamer.put(idx_next)
             if idx_next == eos:
+                if streamer:
+                    streamer.end()
                 break
 
         return idx
