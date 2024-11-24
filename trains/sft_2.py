@@ -120,16 +120,7 @@ def train(
 
     def formatting(example):
         text = tokenizer.apply_chat_template(
-            [
-                [
-                    {
-                        "role": "user" if x["from"] == "human" else "assistant",
-                        "content": x["value"],
-                    }
-                    for x in x
-                ]
-                for x in example["messages"]
-            ],
+            example["messages"],
             tokenize=False,
         )
         return {"text": text}
