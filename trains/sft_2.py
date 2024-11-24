@@ -92,8 +92,12 @@ def train(
             new_lm_head_weights[i] = torch.normal(embed_mean, embed_std)
     w["transformer.wte.weight"] = new_embed_weights
     w["lm_head.weight"] = new_lm_head_weights
-    model.transformer.wte = nn.Embedding(new_vocab_size, embed_dim)
-    model.lm_head = nn.Linear(embed_dim, new_vocab_size, bias=False)
+    model.transformer.wte = nn.Embedding(new_vocab_size, embed_dim).to(
+        device, torch.bfloat16
+    )
+    model.lm_head = nn.Linear(embed_dim, new_vocab_size, bias=False).to(
+        device, torch.bfloat16
+    )
     model.load_state_dict(w)
     for m in model.modules():
         if isinstance(m, CastedLinear):
