@@ -128,7 +128,7 @@ def train(
                     }
                     for x in x
                 ]
-                for x in example["conversations"]
+                for x in example["messages"]
             ],
             tokenize=False,
         )
@@ -196,4 +196,4 @@ def train(
 
 
 if __name__ == "__main__":
-    train(5000, 50000, 4096, 4, 16, "cuda:0", 500)
+    train(5000, 20000, 4096, 4, 16, "cuda:0", 500)
