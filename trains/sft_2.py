@@ -191,8 +191,8 @@ def train(
         model.zero_grad(set_to_none=True)
         print(f"Step: {step}, Loss: {step_loss / train_accumulation_steps}")
         if step % save_steps == 0:
-            torch.save(raw_model.state_dict(), "ckpt.pt")
-    torch.save(raw_model.state_dict(), "ckpt.pt")
+            torch.save(raw_model.state_dict(), "./ckpt/ckpt.pt")
+    torch.save(raw_model.state_dict(), "./ckpt/ckpt.pt")
 
 
 if __name__ == "__main__":
