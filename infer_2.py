@@ -17,30 +17,31 @@ model = GPT(
 )
 model.to(device, dtype=torch.bfloat16)
 model.load_state_dict(torch.load("./ckpt.pt", weights_only=True))
-model: GPT = torch.compile(
-    model, options={"triton.cudagraphs": True}, fullgraph=True, dynamic=True
-)
-with torch.inference_mode():
-    while True:
-        msg = input("Message: ")
-        streamer = TextIteratorStreamer(
-            tokenizer, skip_prompt=False, skip_special_tokens=True
-        )
-        kwargs = dict(
-            idx=tokenizer(
-                msg,
-                return_tensors="pt",
-                add_special_tokens=True,
-            ).input_ids.to(device),
-            max_new_tokens=2000,
-            temperature=0.4,
-            repeat_penalty=1.2,
-            eos=tokenizer.eos_token_id,
-            streamer=streamer,
-        )
-        thread = Thread(target=model.generate, kwargs=kwargs)
-        print(f"Output: {msg}", end="", flush=True)
-        thread.start()
-        for x in streamer:
-            print(x, end="", flush=True)
-        print("")
+if __name__ == "__main__":
+    model: GPT = torch.compile(
+        model, dynamic=True, fullgraph=True, options={"triton.cudagraphs": True}
+    )
+    with torch.inference_mode():
+        while True:
+            msg = input("Message: ")
+            streamer = TextIteratorStreamer(
+                tokenizer, skip_prompt=False, skip_special_tokens=True
+            )
+            kwargs = dict(
+                idx=tokenizer(
+                    msg,
+                    return_tensors="pt",
+                    add_special_tokens=True,
+                ).input_ids.to(device),
+                max_new_tokens=2000,
+                temperature=0.4,
+                repeat_penalty=1.2,
+                eos=tokenizer.eos_token_id,
+                streamer=streamer,
+            )
+            thread = Thread(target=model.generate, kwargs=kwargs)
+            print(f"Output: {msg}", end="", flush=True)
+            thread.start()
+            for x in streamer:
+                print(x, end="", flush=True)
+            print("")

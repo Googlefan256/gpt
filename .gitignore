@@ -2,6 +2,6 @@ __pycache__/
 venv/
 ckpt/
 tok/
-*.sh
 test/
 *.pt
+bench*
