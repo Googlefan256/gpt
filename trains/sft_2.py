@@ -51,15 +51,19 @@ def train(
     )
     w = torch.load("./ckpt.pt", weights_only=True)
     tokenizer.add_tokens(
-        ["<|start_of_turn|>", "<|end_of_turn|>", "<|user|>", "<|assistant|>"]
+        [
+            "<|start_of_turn|>",
+            "<|end_of_turn|>",
+            "<|user|>",
+            "<|assistant|>",
+            "<|system|>",
+        ]
     )
-    new_tokens = ["<|start_of_turn|>", "<|end_of_turn|>", "<|user|>", "<|assistant|>"]
     # Get the original embedding and LM head weights
     orig_embed_weights = w["transformer.wte.weight"]
     orig_lm_head_weights = w["lm_head.weight"]
     with open("./template.jinja", "r") as r:
         tokenizer.chat_template = r.read()
-    tokenizer.add_tokens(new_tokens)
     # Create new embedding weights with expanded size
     new_vocab_size = len(tokenizer)
     embed_dim = orig_embed_weights.shape[1]

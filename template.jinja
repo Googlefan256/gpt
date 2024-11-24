@@ -1,7 +1,7 @@
 {{ bos_token }}
 {% for message in messages %}
-    {% if (message['role'] != 'assistant' and message['role'] != 'user') %}
-        {{ raise_exception('Only user and assistant role are supported') }}
+    {% if (message['role'] != 'assistant' and message['role'] != 'user' and message['role'] != 'system') %}
+        {{ raise_exception('Only user and assistant and system role are supported') }}
     {% endif %}
     {{ '<|start_of_turn|>' + '<|' + message['role'] + '|>'+ '\n' + message['content'] | trim + '<|end_of_turn|>\n' }}
 {% endfor %}
