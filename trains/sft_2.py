@@ -57,6 +57,8 @@ def train(
     # Get the original embedding and LM head weights
     orig_embed_weights = w["transformer.wte.weight"]
     orig_lm_head_weights = w["lm_head.weight"]
+    with open("./template.jinja", "r") as r:
+        tokenizer.chat_template = r.read()
     tokenizer.add_tokens(new_tokens)
     # Create new embedding weights with expanded size
     new_vocab_size = len(tokenizer)
