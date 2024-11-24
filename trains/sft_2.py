@@ -4,7 +4,6 @@ from transformers import (
     GPT2TokenizerFast,
     default_data_collator,
 )
-from torch import nn
 from bitsandbytes import optim
 from datasets import load_dataset, Dataset
 from trl.trainer.utils import ConstantLengthDataset
