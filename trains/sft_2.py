@@ -37,6 +37,16 @@ def train(
     tokenizer: GPT2TokenizerFast = GPT2TokenizerFast.from_pretrained(
         "openai-community/gpt2"
     )
+    w = torch.load("./ckpt.pt", weights_only=True)
+    tokenizer.add_tokens(
+        [
+            "<|start_of_turn|>",
+            "<|end_of_turn|>",
+            "<|user|>",
+            "<|assistant|>",
+            "<|system|>",
+        ]
+    )
     model = (
         GPT(
             GPTConfig(
@@ -49,21 +59,10 @@ def train(
         .to(device, torch.bfloat16)
         .train()
     )
-    w = torch.load("./ckpt.pt", weights_only=True)
-    tokenizer.add_tokens(
-        [
-            "<|start_of_turn|>",
-            "<|end_of_turn|>",
-            "<|user|>",
-            "<|assistant|>",
-            "<|system|>",
-        ]
-    )
-    # Get the original embedding and LM head weights
-    orig_embed_weights = w["transformer.wte.weight"]
-    orig_lm_head_weights = w["lm_head.weight"]
     with open("./template.jinja", "r") as r:
         tokenizer.chat_template = r.read()
+    orig_embed_weights = w["transformer.wte.weight"]
+    orig_lm_head_weights = w["lm_head.weight"]
     # Create new embedding weights with expanded size
     new_vocab_size = len(tokenizer)
     embed_dim = orig_embed_weights.shape[1]
@@ -92,12 +91,6 @@ def train(
             new_lm_head_weights[i] = torch.normal(embed_mean, embed_std)
     w["transformer.wte.weight"] = new_embed_weights
     w["lm_head.weight"] = new_lm_head_weights
-    model.transformer.wte = nn.Embedding(new_vocab_size, embed_dim).to(
-        device, torch.bfloat16
-    )
-    model.lm_head = nn.Linear(embed_dim, new_vocab_size, bias=False).to(
-        device, torch.bfloat16
-    )
     model.load_state_dict(w)
     for m in model.modules():
         if isinstance(m, CastedLinear):
