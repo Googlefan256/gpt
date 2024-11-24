@@ -101,7 +101,7 @@ def train(
     raw_model = model
     model = torch.compile(model)
     optimizer1 = optim.AdamW8bit(
-        [model.transformer.wte.weight], lr=1e-4, betas=(0.9, 0.95)
+        [model.transformer.wte.weight], lr=1e-3, betas=(0.9, 0.95)
     )
     optimizer2 = optim.AdamW8bit([raw_model.lm_head.weight], lr=1e-4, betas=(0.9, 0.95))
     params = list(raw_model.transformer.h.parameters())
