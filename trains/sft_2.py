@@ -85,9 +85,11 @@ def train(
     with torch.inference_mode():
         embed_mean = orig_embed_weights.mean(dim=0)
         embed_std = orig_embed_weights.std(dim=0)
+        head_mean = orig_lm_head_weights.mean(dim=0)
+        head_std = orig_lm_head_weights.std(dim=0)
         for i in range(orig_embed_weights.shape[0], new_vocab_size):
             new_embed_weights[i] = torch.normal(embed_mean, embed_std)
-            new_lm_head_weights[i] = torch.normal(embed_mean, embed_std)
+            new_lm_head_weights[i] = torch.normal(head_mean, head_std)
     w["transformer.wte.weight"] = new_embed_weights
     w["lm_head.weight"] = new_lm_head_weights
     model.load_state_dict(w)
