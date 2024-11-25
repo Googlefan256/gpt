@@ -103,7 +103,7 @@ def train(
     raw_model = model
     model = torch.compile(model)
     optimizer1 = optim.AdamW8bit(
-        [model.transformer.wte.weight], lr=1e-3, betas=(0.9, 0.95)
+        [model.transformer.wte.weight], lr=4e-4, betas=(0.9, 0.95)
     )
     optimizer2 = optim.AdamW8bit([raw_model.lm_head.weight], lr=1e-4, betas=(0.9, 0.95))
     params = list(raw_model.transformer.h.parameters())
@@ -176,6 +176,7 @@ def train(
             # advance the dataset for the next batch
             b = next(train_loader)
             # backward pass
+            torch.nn.utils.clip_grad_norm_(raw_model.parameters(), 5.0)
             loss.backward()  # just sync on the last step
         for p in model.parameters():
             p.grad /= train_accumulation_steps
