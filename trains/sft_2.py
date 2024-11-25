@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 from .train_2_model import GPT, CastedLinear, GPTConfig
 import torch._inductor.config as config
 from .train_2_optimizer import Muon
+from huggingface_hub import hf_hub_download
 
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.set_float32_matmul_precision("high")
@@ -36,7 +37,7 @@ def train(
     tokenizer: GPT2TokenizerFast = GPT2TokenizerFast.from_pretrained(
         "openai-community/gpt2"
     )
-    w = torch.load("./ckpt.pt", weights_only=True)
+    w = torch.load(hf_hub_download("neody/npt-100m", "ckpt.pt"), weights_only=True)
     tokenizer.add_tokens(
         [
             "<|start_of_turn|>",
