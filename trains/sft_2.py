@@ -1,3 +1,4 @@
+from math import nan
 import torch
 from transformers import (
     get_cosine_schedule_with_warmup,
@@ -172,6 +173,10 @@ def train(
                     b["labels"].to(device),
                 )
                 step_loss += loss.detach().item()
+                if step_loss == nan:
+                    print(b["input_ids"])
+                    import os
+                    os._exit(0)
             # advance the dataset for the next batch
             b = next(train_loader)
             # backward pass
