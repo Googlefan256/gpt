@@ -59,6 +59,9 @@ def train(
         .to(device, torch.bfloat16)
         .train()
     )
+    for m in model.modules():
+        if isinstance(m, CastedLinear):
+            m.float()
     with open("./template.jinja", "r") as r:
         tokenizer.chat_template = r.read()
     orig_embed_weights = w["transformer.wte.weight"]
@@ -83,20 +86,16 @@ def train(
     new_embed_weights[: orig_embed_weights.shape[0]] = orig_embed_weights
     new_lm_head_weights[: orig_lm_head_weights.shape[0]] = orig_lm_head_weights
     # Initialize new token embeddings using statistics of existing embeddings
-    with torch.inference_mode():
-        embed_mean = orig_embed_weights.mean(dim=0)
-        embed_std = orig_embed_weights.std(dim=0)
-        head_mean = orig_lm_head_weights.mean(dim=0)
-        head_std = orig_lm_head_weights.std(dim=0)
-        for i in range(orig_embed_weights.shape[0], new_vocab_size):
-            new_embed_weights[i] = torch.normal(embed_mean, embed_std)
-            new_lm_head_weights[i] = torch.normal(head_mean, head_std)
+    embed_mean = orig_embed_weights.mean(dim=0)
+    embed_std = orig_embed_weights.std(dim=0)
+    head_mean = orig_lm_head_weights.mean(dim=0)
+    head_std = orig_lm_head_weights.std(dim=0)
+    for i in range(orig_embed_weights.shape[0], new_vocab_size):
+        new_embed_weights[i] = torch.normal(embed_mean, embed_std)
+        new_lm_head_weights[i] = torch.normal(head_mean, head_std)
     w["transformer.wte.weight"] = new_embed_weights
     w["lm_head.weight"] = new_lm_head_weights
     model.load_state_dict(w)
-    for m in model.modules():
-        if isinstance(m, CastedLinear):
-            m.float()
     print(
         f"Model size: {sum([x.numel() for x in model.parameters()]) * 100 // 1000_000 / 100}M"
     )
@@ -176,7 +175,6 @@ def train(
             # advance the dataset for the next batch
             b = next(train_loader)
             # backward pass
-            torch.nn.utils.clip_grad_norm_(raw_model.parameters(), 5.0)
             loss.backward()  # just sync on the last step
         for p in model.parameters():
             p.grad /= train_accumulation_steps
