@@ -161,8 +161,8 @@ def train(
         for i in range(1, train_accumulation_steps + 1):
             # forward pass
             logits, loss = model(
-                b["input_ids"].to(device, dtype=torch.bfloat16),
-                b["labels"].to(device, dtype=torch.bfloat16),
+                b["input_ids"].to(device),
+                b["labels"].to(device),
             )
             step_loss += loss.detach().item()
             # advance the dataset for the next batch

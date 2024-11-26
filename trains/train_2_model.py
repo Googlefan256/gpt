@@ -181,7 +181,7 @@ class GPT(nn.Module):
             loss = linear_cross_entropy(
                 x,
                 self.lm_head.weight,
-                target.to(x.device),
+                target,
                 softcap=30,
                 shift=True,
             )
