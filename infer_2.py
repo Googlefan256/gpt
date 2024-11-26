@@ -1,4 +1,4 @@
-from trains.train_2_model import GPT, GPTConfig, CastedLinear
+from trains.train_2_model import GPT, GPTConfig
 from transformers import GPT2TokenizerFast, TextIteratorStreamer
 import torch
 from threading import Thread
@@ -17,9 +17,6 @@ model = GPT(
     )
 )
 model.to(device, dtype=torch.bfloat16)
-for m in model.modules():
-    if isinstance(m, CastedLinear):
-        m.float()
 model.load_state_dict(
     torch.load(hf_hub_download("neody/npt-100m", "ckpt.pt"), weights_only=True)
 )
