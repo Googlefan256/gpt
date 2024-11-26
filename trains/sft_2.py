@@ -9,7 +9,7 @@ from bitsandbytes import optim
 from datasets import load_dataset, Dataset
 from trl.trainer.utils import ConstantLengthDataset
 from torch.utils.data import DataLoader
-from .train_2_model import GPT, CastedLinear, GPTConfig
+from .train_2_model import GPT, GPTConfig
 import torch._inductor.config as config
 from .train_2_optimizer import Muon
 from huggingface_hub import hf_hub_download
@@ -60,9 +60,6 @@ def train(
         .to(device, torch.bfloat16)
         .train()
     )
-    for m in model.modules():
-        if isinstance(m, CastedLinear):
-            m.float()
     with open("./template.jinja", "r") as r:
         tokenizer.chat_template = r.read()
     orig_embed_weights = w["transformer.wte.weight"]

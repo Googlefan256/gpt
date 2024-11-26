@@ -9,7 +9,7 @@ import torch
 from datasets import load_dataset, IterableDataset, DownloadConfig
 from trl.trainer.utils import ConstantLengthDataset
 from torch.utils.data import DataLoader
-from .train_2_model import GPT, CastedLinear, GPTConfig
+from .train_2_model import GPT, GPTConfig
 import torch._inductor.config as config
 from .train_2_optimizer import Muon
 
@@ -49,9 +49,6 @@ def train(
         .to(device, torch.bfloat16)
         .train()
     )
-    for m in model.modules():
-        if isinstance(m, CastedLinear):
-            m.float()
     print(
         f"Model size: {sum([x.numel() for x in model.parameters()]) * 100 // 1000_000 / 100}M"
     )
