@@ -89,7 +89,7 @@ def train(
         shuffle=False,
     )
     train_loader = iter(
-        DataLoader(ds, batch_size=bsz, num_workers=4, collate_fn=default_data_collator)
+        DataLoader(ds, batch_size=bsz, num_workers=20, collate_fn=default_data_collator)
     )
     print("Created train loader")
     b = next(train_loader)
