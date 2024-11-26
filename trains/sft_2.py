@@ -1,4 +1,3 @@
-from math import nan
 import torch
 from transformers import (
     get_cosine_schedule_with_warmup,
@@ -115,9 +114,6 @@ def train(
         get_cosine_schedule_with_warmup(optimizer, warmup_steps, train_steps)
         for optimizer in optimizers
     ]
-    ctx = torch.amp.autocast(
-        device_type="cuda" if "cuda" in device else "cpu", dtype=torch.bfloat16
-    )
     ds: Dataset = load_dataset("HuggingFaceTB/smoltalk", "all", split="train")
 
     def formatting(example):
@@ -164,17 +160,11 @@ def train(
         step_loss = 0
         for i in range(1, train_accumulation_steps + 1):
             # forward pass
-            with ctx:
-                logits, loss = model(
-                    b["input_ids"].to(device),
-                    b["labels"].to(device),
-                )
-                step_loss += loss.detach().item()
-                if step_loss == nan:
-                    print(b["input_ids"])
-                    import os
-
-                    os._exit(0)
+            logits, loss = model(
+                b["input_ids"].to(device, dtype=torch.bfloat16),
+                b["labels"].to(device, dtype=torch.bfloat16),
+            )
+            step_loss += loss.detach().item()
             # advance the dataset for the next batch
             b = next(train_loader)
             # backward pass

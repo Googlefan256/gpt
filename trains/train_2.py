@@ -72,9 +72,6 @@ def train(
         get_cosine_schedule_with_warmup(optimizer, warmup_steps, train_steps)
         for optimizer in optimizers
     ]
-    ctx = torch.amp.autocast(
-        device_type="cuda" if "cuda" in device else "cpu", dtype=torch.bfloat16
-    )
     ds: IterableDataset = load_dataset(
         "Zyphra/Zyda-2",
         split="train",
@@ -100,12 +97,11 @@ def train(
         step_loss = 0
         for i in range(1, train_accumulation_steps + 1):
             # forward pass
-            with ctx:
-                logits, loss = model(
-                    b["input_ids"].to(device),
-                    b["labels"].to(device),
-                )
-                step_loss += loss.detach().item()
+            logits, loss = model(
+                b["input_ids"].to(device, dtype=torch.bfloat16),
+                b["labels"].to(device, dtype=torch.bfloat16),
+            )
+            step_loss += loss.detach().item()
             # advance the dataset for the next batch
             b = next(train_loader)
             # backward pass
