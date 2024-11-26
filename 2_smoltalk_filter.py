@@ -174,7 +174,7 @@ FILTER_WORDS = [
     "I am an AI",
     "my purpose",
     "filter_bad_language",
-    "filter\_bad\_language",
+    "filter\\_bad\\_language",
     "entertainment purposes",
     "purely hypothetical",
     "not a human",
