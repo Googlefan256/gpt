@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from transformers.loss.loss_utils import ForCausalLMLoss
 from transformers import TextIteratorStreamer
+from cut_cross_entropy import linear_cross_entropy
 
 import torch
 from torch import nn
@@ -181,13 +181,20 @@ class GPT(nn.Module):
             )
 
         x = F.rms_norm(x, (x.size(-1),))
-        logits = self.lm_head(x)
-        logits = 30 * torch.tanh(logits / 30)  # @Grad62304977
-        logits = logits.float()
         if target is not None:
-            loss = ForCausalLMLoss(logits, target, self.config.vocab_size)
+            logits = None
+            loss = linear_cross_entropy(
+                x,
+                self.lm_head.weight,
+                target.to(x.device),
+                softcap=30,
+                shift=True,
+            )
         else:
             loss = None
+            logits = self.lm_head(x)
+            logits = 30 * torch.tanh(logits / 30)  # @Grad62304977
+            logits = logits.float()
         return logits, loss
 
     @torch.inference_mode()

@@ -81,7 +81,7 @@ def train(
     ds: IterableDataset = load_dataset(
         "Zyphra/Zyda-2",
         split="train",
-        name="zyda_crossdeduped-filtered",
+        name="default",
         streaming=True,
         download_config=DownloadConfig(resume_download=True),
     )

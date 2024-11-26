@@ -4,3 +4,4 @@ datasets
 bitsandbytes
 peft
 ninja
+"cut-cross-entropy @ git+https://github.com/apple/ml-cross-entropy.git"

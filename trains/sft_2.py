@@ -176,6 +176,7 @@ def train(
                 if step_loss == nan:
                     print(b["input_ids"])
                     import os
+
                     os._exit(0)
             # advance the dataset for the next batch
             b = next(train_loader)
