@@ -55,15 +55,13 @@ def train(
     raw_model = model
     model = torch.compile(model)
     optimizer1 = optim.AdamW8bit(
-        [model.transformer.wte.weight], lr=5e-4, betas=(0.9, 0.95)
+        [model.transformer.wte.weight], lr=1e-3, betas=(0.9, 0.95)
     )
-    optimizer2 = optim.AdamW8bit(
-        [raw_model.lm_head.weight], lr=3.5e-4, betas=(0.9, 0.95)
-    )
+    optimizer2 = optim.AdamW8bit([raw_model.lm_head.weight], lr=5e-4, betas=(0.9, 0.95))
     params = list(raw_model.transformer.h.parameters())
     matrix_params = [p for p in params if p.ndim == 2]
     scalar_params = [p for p in params if p.ndim < 2] + [raw_model.skip_weights]
-    optimizer3 = Muon(matrix_params, lr=3.5e-4, momentum=0.95)
+    optimizer3 = Muon(matrix_params, lr=5e-4, momentum=0.95)
     optimizer4 = optim.AdamW8bit(
         scalar_params, lr=3.5e-4, betas=(0.9, 0.95)
     )  # note that this learning rate is neither sensitive nor tuned
@@ -75,7 +73,7 @@ def train(
     ds: IterableDataset = load_dataset(
         "Zyphra/Zyda-2",
         split="train",
-        name="default",
+        name="fwe3",
         streaming=True,
         download_config=DownloadConfig(resume_download=True),
     )
@@ -121,4 +119,4 @@ def train(
 
 
 if __name__ == "__main__":
-    train(500, 30000, 4096, 10, 128, "cuda:0", 100)
+    train(5000, 300000, 4096, 10, 12, "cuda:0", 100)
