@@ -55,15 +55,15 @@ def train(
     raw_model = model
     model = torch.compile(model)
     optimizer1 = optim.AdamW8bit(
-        [model.transformer.wte.weight], lr=1e-3, betas=(0.9, 0.95)
+        [model.transformer.wte.weight], lr=1e-2, betas=(0.9, 0.95)
     )
-    optimizer2 = optim.AdamW8bit([raw_model.lm_head.weight], lr=5e-4, betas=(0.9, 0.95))
+    optimizer2 = optim.AdamW8bit([raw_model.lm_head.weight], lr=5e-3, betas=(0.9, 0.95))
     params = list(raw_model.transformer.h.parameters())
     matrix_params = [p for p in params if p.ndim == 2]
     scalar_params = [p for p in params if p.ndim < 2] + [raw_model.skip_weights]
-    optimizer3 = Muon(matrix_params, lr=5e-4, momentum=0.95)
+    optimizer3 = Muon(matrix_params, lr=5e-3, momentum=0.95)
     optimizer4 = optim.AdamW8bit(
-        scalar_params, lr=3.5e-4, betas=(0.9, 0.95)
+        scalar_params, lr=3.5e-3, betas=(0.9, 0.95)
     )  # note that this learning rate is neither sensitive nor tuned
     optimizers = [optimizer1, optimizer2, optimizer3, optimizer4]
     schedulers = [
