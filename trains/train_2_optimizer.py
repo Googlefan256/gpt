@@ -113,6 +113,7 @@ class Muon(torch.optim.Optimizer):
                 g = g.lerp_(buf, momentum) if nesterov else buf
                 g = zeropower_via_newtonschulz5(g, steps=ns_steps).flatten()
                 update_prev()
-                handle = dist.all_gather(update_buffers, g, async_op=True)
+                if "WORLD_SIZE" in os.environ:
+                    handle = dist.all_gather(update_buffers, g, async_op=True)
                 params_world = params[base_i : base_i + self.world_size]
             update_prev()
