@@ -73,7 +73,7 @@ def train(
     ds: IterableDataset = load_dataset(
         "HuggingFaceFW/fineweb-2",
         split="train",
-        name="jpn_Jpan_removeds",
+        name="jpn_Jpan_removed",
         streaming=True,
         download_config=DownloadConfig(resume_download=True),
     )
