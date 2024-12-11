@@ -1,11 +1,6 @@
 import torch
+from torch import distributed as dist
 import os
-import torch.distributed as dist
-
-
-def zeropower_via_svd(G, steps=None):
-    U, S, V = G.svd()
-    return U @ V.T
 
 
 @torch.compile
@@ -36,11 +31,6 @@ def zeropower_via_newtonschulz5(G, steps=10, eps=1e-7):
     return X
 
 
-zeropower_backends = dict(
-    svd=zeropower_via_svd, newtonschulz5=zeropower_via_newtonschulz5
-)
-
-
 class Muon(torch.optim.Optimizer):
     """
     Muon - MomentUm Orthogonalized by Newton-schulz
@@ -63,27 +53,27 @@ class Muon(torch.optim.Optimizer):
         lr: The learning rate used by the internal SGD.
         momentum: The momentum used by the internal SGD.
         nesterov: Whether to use Nesterov-style momentum in the internal SGD. (recommended)
-        backend: The chosen backend for the orthogonalization step. (recommended: 'newtonschulz5')
-        backend_steps: The number of iteration steps to use in the backend, if it is iterative.
+        ns_steps: The number of Newton-Schulz iteration steps to use.
     """
 
-    def __init__(
-        self,
-        params,
-        lr=0.02,
-        momentum=0.95,
-        nesterov=True,
-        backend="newtonschulz5",
-        backend_steps=5,
-    ):
-        defaults = dict(
-            lr=lr,
-            momentum=momentum,
-            nesterov=nesterov,
-            backend=backend,
-            backend_steps=backend_steps,
-        )
-        super().__init__(params, defaults)
+    def __init__(self, params, lr=0.02, momentum=0.95, nesterov=True, ns_steps=5):
+        self.world_size = int(os.environ.get("WORLD_SIZE") or 0)
+        self.rank = int(os.environ.get("RANK") or 0)
+        defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov, ns_steps=ns_steps)
+        params = list(params)
+        assert all(isinstance(p, torch.Tensor) for p in params)
+        sizes = {p.numel() for p in params}
+        param_groups = [
+            {
+                "params": [p for p in params if p.numel() == size],
+                "update_buffer": [
+                    torch.empty(size, device="cuda", dtype=torch.bfloat16)
+                    for _ in range(self.world_size)
+                ],
+            }
+            for size in sizes
+        ]
+        super().__init__(param_groups, defaults)
 
     def step(self):
 
@@ -91,43 +81,38 @@ class Muon(torch.optim.Optimizer):
 
             lr = group["lr"]
             momentum = group["momentum"]
-            zeropower_backend = zeropower_backends[group["backend"]]
-
+            nesterov = group["nesterov"]
+            ns_steps = group["ns_steps"]
+            update_buffers = group["update_buffer"]
             # generate weight updates in distributed fashion
-            total_params = sum(p.numel() for p in group["params"])
-            updates_flat = torch.zeros(
-                total_params, device="cuda", dtype=torch.bfloat16
-            )
-            curr_idx = 0
-            for i, p in enumerate(group["params"]):
-                # luckily this will perfectly distribute a transformer with multiple of 4 layers to 8 GPUs
-                if not "WORLD_SIZE" in os.environ or i % int(
-                    os.environ["WORLD_SIZE"]
-                ) == int(os.environ["RANK"]):
-                    g = p.grad
-                    assert g is not None
-                    state = self.state[p]
-                    if "momentum_buffer" not in state:
-                        state["momentum_buffer"] = torch.zeros_like(g)
-                    buf = state["momentum_buffer"]
-                    buf.mul_(momentum).add_(g)
-                    if group["nesterov"]:
-                        g = g.add(buf, alpha=momentum)
-                    g = zeropower_backend(g, steps=group["backend_steps"])
-                    g *= max(1, g.size(0) / g.size(1)) ** 0.5
-                    updates_flat[curr_idx : curr_idx + p.numel()] = g.flatten()
-                curr_idx += p.numel()
-            if "WORLD_SIZE" in os.environ:
-                # sync updates across devices. we are not memory-constrained so can do this simple deserialization
-                dist.all_reduce(updates_flat, op=dist.ReduceOp.SUM)
+            params = group["params"]
+            assert self.world_size == 0 or len(params) % self.world_size == 0
+            handle = None
+            params_world = None
 
-            # deserialize and apply updates
-            curr_idx = 0
-            for p in group["params"]:
-                g = (
-                    updates_flat[curr_idx : curr_idx + p.numel()]
-                    .view_as(p.data)
-                    .type_as(p.data)
-                )
-                p.data.add_(g, alpha=-lr)
-                curr_idx += p.numel()
+            def update_prev():
+                if params_world is None:
+                    return
+                assert handle is not None
+                handle.wait()
+                for p_world, g_world in zip(params_world, update_buffers):
+                    p_world.data.add_(
+                        g_world.view_as(p_world),
+                        alpha=-lr * max(1, p_world.size(0) / p_world.size(1)) ** 0.5,
+                    )
+
+            for base_i in range(len(params))[:: self.world_size]:
+                p = params[base_i + self.rank]
+                g = p.grad
+                assert g is not None
+                state = self.state[p]
+                if "momentum_buffer" not in state:
+                    state["momentum_buffer"] = torch.zeros_like(g)
+                buf = state["momentum_buffer"]
+                buf.lerp_(g, 1 - momentum)
+                g = g.lerp_(buf, momentum) if nesterov else buf
+                g = zeropower_via_newtonschulz5(g, steps=ns_steps).flatten()
+                update_prev()
+                handle = dist.all_gather(update_buffers, g, async_op=True)
+                params_world = params[base_i : base_i + self.world_size]
+            update_prev()
