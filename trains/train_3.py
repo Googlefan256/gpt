@@ -1,7 +1,7 @@
 import torch
 from transformers import (
     get_cosine_schedule_with_warmup,
-    GPT2TokenizerFast,
+    AutoTokenizer,
     default_data_collator,
 )
 from bitsandbytes import optim
@@ -34,7 +34,7 @@ def train(
 ):
     if hasattr(config, "coordinate_descent_tuning"):
         config.coordinate_descent_tuning = True  # suggested by @Chillee
-    tokenizer: GPT2TokenizerFast = GPT2TokenizerFast.from_pretrained(
+    tokenizer: AutoTokenizer = AutoTokenizer.from_pretrained(
         "llm-jp/llm-jp-tokenizer-v3.0b2"
     )
     model = (
@@ -61,7 +61,7 @@ def train(
     params = list(raw_model.transformer.h.parameters())
     matrix_params = [p for p in params if p.ndim == 2]
     scalar_params = [p for p in params if p.ndim < 2] + [raw_model.skip_weights]
-    optimizer3 = Muon(matrix_params, lr=5e-3, momentum=0.95)
+    optimizer3 = Muon(matrix_params, lr=1e-2, momentum=0.95)
     optimizer4 = optim.AdamW8bit(
         scalar_params, lr=3.5e-3, betas=(0.9, 0.95)
     )  # note that this learning rate is neither sensitive nor tuned
