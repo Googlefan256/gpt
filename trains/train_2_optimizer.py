@@ -57,7 +57,7 @@ class Muon(torch.optim.Optimizer):
     """
 
     def __init__(self, params, lr=0.02, momentum=0.95, nesterov=True, ns_steps=5):
-        self.world_size = int(os.environ.get("WORLD_SIZE") or 0)
+        self.world_size = int(os.environ.get("WORLD_SIZE") or 1)
         self.rank = int(os.environ.get("RANK") or 0)
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov, ns_steps=ns_steps)
         params = list(params)
@@ -86,7 +86,7 @@ class Muon(torch.optim.Optimizer):
             update_buffers = group["update_buffer"]
             # generate weight updates in distributed fashion
             params = group["params"]
-            assert self.world_size == 0 or len(params) % self.world_size == 0
+            assert len(params) % self.world_size == 0
             handle = None
             params_world = None
 
