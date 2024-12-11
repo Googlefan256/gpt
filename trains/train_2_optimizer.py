@@ -93,8 +93,8 @@ class Muon(torch.optim.Optimizer):
             def update_prev():
                 if params_world is None:
                     return
-                assert handle is not None
-                handle.wait()
+                if handle is not None:
+                    handle.wait()
                 for p_world, g_world in zip(params_world, update_buffers):
                     p_world.data.add_(
                         g_world.view_as(p_world),
